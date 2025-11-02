@@ -436,7 +436,7 @@ const EasyGrocery: NextPage = () => {
                     required
                     value={formData.name}
                     onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                    className={`w-full px-4 py-3 rounded-xl border ${isDark ? 'bg-white/5 border-white/20 text-white placeholder-gray-400 focus:border-white/50' : 'bg-white border-slate-200 text-slate-900 placeholder-slate-400 focus:border-sky-500'} transition focus:outline-none focus:ring-2 focus:ring-sky-500/20`}
+                    className={`w-full px-4 py-3 rounded-xl border ${isDark ? 'bg-white/5 border-white/20 text-white placeholder-gray-400 focus:border-white/50' : 'bg-white border-slate-200 text-slate-900 placeholder-slate-400 focus:border-gray-500'} transition focus:outline-none focus:ring-2 focus:ring-sky-500/20`}
                     placeholder="John Doe"
                   />
                 </div>
@@ -449,7 +449,7 @@ const EasyGrocery: NextPage = () => {
                     required
                     value={formData.email}
                     onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                    className={`w-full px-4 py-3 rounded-xl border ${isDark ? 'bg-white/5 border-white/20 text-white placeholder-gray-400 focus:border-white/50' : 'bg-white border-slate-200 text-slate-900 placeholder-slate-400 focus:border-sky-500'} transition focus:outline-none focus:ring-2 focus:ring-sky-500/20`}
+                    className={`w-full px-4 py-3 rounded-xl border ${isDark ? 'bg-white/5 border-white/20 text-white placeholder-gray-400 focus:border-white/50' : 'bg-white border-slate-200 text-slate-900 placeholder-slate-400 focus:border-gray-500'} transition focus:outline-none focus:ring-2 focus:ring-sky-500/20`}
                     placeholder="john@example.com"
                   />
                 </div>
@@ -464,7 +464,7 @@ const EasyGrocery: NextPage = () => {
                   rows={5}
                   value={formData.query}
                   onChange={(e) => setFormData({ ...formData, query: e.target.value })}
-                  className={`w-full px-4 py-3 rounded-xl border ${isDark ? 'bg-white/5 border-white/20 text-white placeholder-gray-400 focus:border-white/50' : 'bg-white border-slate-200 text-slate-900 placeholder-slate-400 focus:border-sky-500'} transition focus:outline-none focus:ring-2 focus:ring-sky-500/20 resize-none`}
+                  className={`w-full px-4 py-3 rounded-xl border ${isDark ? 'bg-white/5 border-white/20 text-white placeholder-gray-400 focus:border-white/50' : 'bg-white border-slate-200 text-slate-900 placeholder-slate-400 focus:border-gray-500'} transition focus:outline-none focus:ring-2 focus:ring-gray-400/20 resize-none`}
                   placeholder="Describe your issue or suggestion in detail..."
                 />
               </div>
