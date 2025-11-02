@@ -4,7 +4,7 @@ import Head from 'next/head';
 import Image from 'next/image';
 import { useEffect, useState, useRef } from 'react';
 import { motion } from 'framer-motion';
-import { FaDownload, FaBars, FaTimes, FaMoon, FaSun } from 'react-icons/fa';
+import { FaDownload, FaBars, FaTimes, FaMoon, FaSun, FaPaperPlane, FaCheck } from 'react-icons/fa';
 import logo from '../public/logo.png';
 
 const STATUS_CYCLE = ['Pending', 'Not Found', 'Purchased', 'Not Available'];
@@ -26,12 +26,46 @@ const EasyGrocery: NextPage = () => {
   const [pulseKey, setPulseKey] = useState(0);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [isDark, setIsDark] = useState(false);
-  const [videoPhase, setVideoPhase] = useState(0); // 0: 1 video, 1: 2 videos, 2: 3 videos
+  const [formData, setFormData] = useState({ name: '', email: '', query: '' });
+  const [showSuccess, setShowSuccess] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [error, setError] = useState('');
+
+  const handleSubmit = async (e: React.FormEvent) => {
+  e.preventDefault();
+  setIsSubmitting(true);
+  setError('');
+  setShowSuccess(false);
+
+  try {
+    const res = await fetch('/api/sendEmail', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        name: formData.name,
+        email: formData.email,
+        query: formData.query,
+      }),
+    });
+
+    const data = await res.json();
+
+    if (res.ok) {
+      setShowSuccess(true);
+      setFormData({ name: '', email: '', query: '' });
+      setTimeout(() => setShowSuccess(false), 4000);
+    } else {
+      setError(data.error || 'Something went wrong.');
+    }
+  } catch (err) {
+    setError('Network error. Please check your connection.');
+  } finally {
+    setIsSubmitting(false);
+  }
+};
 
   const statusRef = useRef(0);
-  const phaseRef = useRef(0);
 
-  // Intersection Observer
   useEffect(() => {
     const observer = new IntersectionObserver(
       (entries) => {
@@ -47,7 +81,6 @@ const EasyGrocery: NextPage = () => {
     return () => observer.disconnect();
   }, []);
 
-  // Status Cycle
   useEffect(() => {
     const interval = setInterval(() => {
       statusRef.current = (statusRef.current + 1) % STATUS_CYCLE.length;
@@ -57,16 +90,8 @@ const EasyGrocery: NextPage = () => {
     return () => clearInterval(interval);
   }, []);
 
-  // Video Phase Cycle
-  useEffect(() => {
-    const interval = setInterval(() => {
-      phaseRef.current = (phaseRef.current + 1) % 3;
-      setVideoPhase(phaseRef.current);
-    }, 4000);
-    return () => clearInterval(interval);
-  }, []);
-
   const STATUS_COLORS = isDark ? STATUS_COLORS_DARK : STATUS_COLORS_LIGHT;
+
 
   return (
     <div className={`min-h-screen transition-all duration-500 ${isDark ? 'bg-black text-white' : 'bg-white text-slate-900'} font-poppins antialiased`}>
@@ -99,20 +124,40 @@ const EasyGrocery: NextPage = () => {
       {/* Header */}
       <header className="sticky top-6 z-50">
         <div className="max-w-7xl mx-auto px-6">
-          <div className={`flex items-center justify-between gap-4 rounded-2xl border p-4 shadow-md ${isDark ? 'bg-white/5 backdrop-blur-xl border-white/10' : 'bg-white/80 backdrop-blur border-slate-100'}`}>
+          <div className={`flex items-center justify-between gap-4 rounded-2xl border p-4 shadow-md ${isDark ? 'bg-white/5 backdrop-blur-xl border-white/10' : 'bg-white/80 backdrop-blur border-slate-100'} transition-all duration-300`}>
+            {/* Logo + Title */}
             <div className="flex items-center gap-3">
-              <div className="w-11 h-11 rounded-lg flex items-center justify-center text-black font-bold shadow">
-                <Image src={logo} alt="EasyGrocery Logo" />
+              {/* ROUNDED LOGO (CONTACT FORM STYLE) */}
+              <div className="relative w-14 h-14">
+                {/* Outer Gradient Ring */}
+                <div className="absolute inset-0 rounded-full bg-gradient-to-br from-[#e7e6e6ff] to-[#e7e6e6ff] p-[2px] shadow-xl">
+                  {/* Inner White Circle */}
+                  <div className="w-full h-full rounded-full bg-white flex items-center justify-center overflow-hidden">
+                    <Image
+                      src={logo}
+                      alt="EasyGrocery Logo"
+                      width={36}
+                      height={36}
+                      className="w-9 h-9 object-contain"
+                    />
+                  </div>
+                </div>
               </div>
+
+              {/* Title */}
               <div>
-                <h1 className={`text-lg sm:text-xl font-semibold ${isDark ? 'text-white' : 'text-slate-900'}`}>EasyGrocery</h1>
-                <p className={`text-xs ${isDark ? 'text-gray-400' : 'text-slate-500'} -mt-0.5`}>Simplify your shopping</p>
+                <h1 className={`text-lg sm:text-xl font-bold ${isDark ? 'text-white' : 'text-slate-900'} tracking-tight`}>
+                  EasyGrocery
+                </h1>
+                <p className={`text-xs ${isDark ? 'text-gray-400' : 'text-slate-500'} -mt-0.5`}>
+                  Simplify your shopping
+                </p>
               </div>
             </div>
 
             <nav className="hidden md:flex gap-6 text-sm font-medium">
-              {['Features', 'Preview', 'Why Choose', 'Privacy'].map((item) => (
-                <a key={item} href={`#${item.toLowerCase().replace(' ', '-')}`} className={`${isDark ? 'text-gray-300 hover:text-white' : 'text-slate-700 hover:text-sky-600'} transition`}>
+              {['Features', 'Preview', 'Why Choose', 'Privacy', 'Contact'].map((item) => (
+                <a key={item} href={`#${item.toLowerCase().replace(' ', '-')}`} className={`${isDark ? 'text-gray-300 hover:text-white' : 'text-slate-700 hover:text-gray-600'} transition`}>
                   {item}
                 </a>
               ))}
@@ -124,7 +169,7 @@ const EasyGrocery: NextPage = () => {
                 download
                 className={`inline-flex items-center gap-2 px-4 py-2 rounded-full font-semibold shadow-lg transition-transform ${isDark ? 'bg-white text-black hover:scale-105' : 'bg-gradient-to-r from-[#e7e6e6ff] to-[#e7e6e6ff] text-black hover:scale-[1.02]'}`}
               >
-                Downloade The App
+                Download App
               </a>
             </div>
 
@@ -151,7 +196,7 @@ const EasyGrocery: NextPage = () => {
               className={`md:hidden mt-2 rounded-xl border p-4 shadow-lg ${isDark ? 'bg-white/5 backdrop-blur-xl border-white/10' : 'bg-white/90 backdrop-blur border-slate-100'}`}
             >
               <nav className="flex flex-col gap-3 text-sm font-medium">
-                {['Features', 'Preview', 'Why Choose', 'Privacy'].map((item) => (
+                {['Features', 'Preview', 'Why Choose', 'Privacy', 'Contact'].map((item) => (
                   <a key={item} href={`#${item.toLowerCase().replace(' ', '-')}`} onClick={() => setMobileMenuOpen(false)} className={`${isDark ? 'text-gray-300 hover:text-white' : 'text-slate-700 hover:text-sky-600'}`}>
                     {item}
                   </a>
@@ -221,53 +266,59 @@ const EasyGrocery: NextPage = () => {
               <div className="mt-6 flex items-center gap-3">
                 <button className={`px-1 py-2 rounded-md text-sm font-semibold border ${isDark ? 'bg-white/10 text-white border-white/20' : 'bg-sky-50 text-sky-700 border-sky-100'}`}>Open List</button>
                 <button className={`px-3 py-2 rounded-md text-sm border ${isDark ? 'bg-white/5 text-gray-300 border-white/10' : 'bg-white text-slate-700 border-slate-200'}`}>Share</button>
-                <button className={`flex px-3 py-2 rounded-md text-sm border ${isDark ? 'bg-white/5 text-gray-300 border-white/10' : 'bg-white text-slate-700 border-slate-200'}`}>
-                 <a href="/easygrocery.apk" download className='flex'>  Easygrocery <FaDownload className="ml-1" /></a>
-                </button>
+                <a href="/easygrocery.apk" download className={`flex px-3 py-2 rounded-md text-sm border ${isDark ? 'bg-white/5 text-gray-300 border-white/10' : 'bg-white text-slate-700 border-slate-200'}`}>
+                  Easygrocery <FaDownload className="ml-1" />
+                </a>
               </div>
             </div>
           </motion.div>
         </div>
       </section>
 
-      {/* SCREEN SECTION - 3 Videos */}
-   {/* SCREEN SECTION - Sirf 1 Video (demo1.mp4) */}
-<section id="screen" className="py-16 px-6">
-  <div className="max-w-7xl mx-auto grid lg:grid-cols-2 gap-12 items-center">
-    <motion.div initial={{ opacity: 0, x: -50 }} whileInView={{ opacity: 1, x: 0 }} viewport={{ once: true }} className="space-y-5">
-      <h3 className="text-3xl font-bold">See EasyGrocery in Action</h3>
-      <p className={`text-lg leading-relaxed ${isDark ? 'text-gray-300' : 'text-slate-600'}`}>
-        Watch the app in action with a smooth demo.
-      </p>
-      <ul className="mt-4 space-y-3">
-        {['Clean UI and fast scanning', 'Real-time sync & family collaboration', 'Auto reminders every 4 hours'].map((text) => (
-          <li key={text} className={`flex gap-3 items-start ${isDark ? 'text-gray-300' : 'text-slate-700'}`}>
-            <span className={`mt-1 inline-block w-3 h-3 rounded-full ${isDark ? 'bg-gray-500' : 'bg-[#e7e6e6ff]'}`} />
-            {text}
-          </li>
-        ))}
-      </ul>
-      <div className="mt-4">
-        <a href="/easygrocery.apk" download className={`inline-block px-5 py-3 rounded-full font-semibold shadow ${isDark ? 'bg-white text-black' : 'bg-gradient-to-r from-[#e7e6e6ff] to-[#e7e6e6ff] text-black'}`}>
-          Start Free
-        </a>
-        <a href="#features" className={`ml-3 text-sm underline ${isDark ? 'text-gray-400' : 'text-slate-600'}`}>Learn more</a>
-      </div>
-    </motion.div>
+      {/* SCREEN SECTION */}
+      <section id="screen" className="py-16 px-6">
+        <div className="max-w-7xl mx-auto grid lg:grid-cols-2 gap-12 items-center">
+          <motion.div initial={{ opacity: 0, x: -50 }} whileInView={{ opacity: 1, x: 0 }} viewport={{ once: true }} className="space-y-5">
+            <h3 className="text-3xl font-bold">See EasyGrocery in Action</h3>
+            <p className={`text-lg leading-relaxed ${isDark ? 'text-gray-300' : 'text-slate-600'}`}>
+              Watch the app in action with a smooth demo.
+            </p>
+            <ul className="mt-4 space-y-3">
+              {['Clean UI and fast scanning', 'Real-time sync & family collaboration', 'Auto reminders every 4 hours'].map((text) => (
+                <li key={text} className={`flex gap-3 items-start ${isDark ? 'text-gray-300' : 'text-slate-700'}`}>
+                  <span className={`mt-1 inline-block w-3 h-3 rounded-full ${isDark ? 'bg-gray-500' : 'bg-[#e7e6e6ff]'}`} />
+                  {text}
+                </li>
+              ))}
+            </ul>
+            <div className="mt-4">
+              <a href="/easygrocery.apk" download className={`inline-block px-5 py-3 rounded-full font-semibold shadow ${isDark ? 'bg-white text-black' : 'bg-gradient-to-r from-[#e7e6e6ff] to-[#e7e6e6ff] text-black'}`}>
+                Start Free
+              </a>
+              <a href="#features" className={`ml-3 text-sm underline ${isDark ? 'text-gray-400' : 'text-slate-600'}`}>Learn more</a>
+            </div>
+          </motion.div>
 
-  <motion.div initial={{ opacity: 0, scale: 0.95 }} whileInView={{ opacity: 1, scale: 1 }} viewport={{ once: true }} className="flex justify-center">
-  <div className="rounded-[40px] w-[320px] h-full bg-black overflow-hidden shadow-[0_30px_70px_rgba(14,165,233,0.12)] border-8 border-black relative">
-    <div className="flex-1 relative overflow-hidden">
+          <motion.div initial={{ opacity: 0, scale: 0.95 }} whileInView={{ opacity: 1, scale: 1 }} viewport={{ once: true }} className="flex justify-center">
+            <div className="rounded-[40px] w-[320px] h-[680px] bg-black overflow-hidden shadow-[0_30px_70px_rgba(14,165,233,0.12)] border-8 border-black relative">
+              <div className="h-10 flex items-center justify-center bg-black/60">
+                <div className="w-24 h-2 rounded-full bg-black/30" />
+              </div>
+              <div className="flex-1 relative overflow-hidden">
+                <video
+                  src="/videos/demo1.mp4"
+                  autoPlay
+                  muted
+                  loop
+                  playsInline
+                  className="w-full h-full object-cover"
+                />
+              </div>
+            </div>
+          </motion.div>
+        </div>
+      </section>
 
-      {/* Video Player with Sequence */}
-      <VideoSequence />
-
- 
-    </div>
-  </div>
-</motion.div>
-  </div>
-</section>
       {/* PURPOSE */}
       <section id="purpose" className={`py-16 px-6 ${isDark ? 'bg-gradient-to-b from-black to-gray-950/30' : 'bg-gradient-to-b from-white to-sky-50/30'}`}>
         <div className="max-w-5xl mx-auto text-center">
@@ -320,10 +371,10 @@ const EasyGrocery: NextPage = () => {
           <h2 className="text-3xl font-bold">Future Updates / Coming Soon</h2>
           <p className={`mt-4 ${isDark ? 'text-gray-400' : 'text-slate-600'}`}>We are continuously improving EasyGrocery. Upcoming features include:</p>
           <div className="flex flex-wrap gap-10 mt-5 justify-center">
-            <PrivacyCard desc='Password-Protected Sharing — secure family sharing' title='' isDark={isDark} />
-            <PrivacyCard desc='AI integration hogi take grocerry items ko or achy sy handle kia jaye' title='' isDark={isDark} />
-            <PrivacyCard desc='Delete for Everyone — remove shared lists from all devices' title='' isDark={isDark} />
-            <PrivacyCard desc='Dark Mode — comfortable night viewing' title='' isDark={isDark} />
+            <PrivacyCard desc="Password-Protected Sharing — secure family sharing" title="" isDark={isDark} />
+            <PrivacyCard desc="AI Integration — smarter item handling" title="" isDark={isDark} />
+            <PrivacyCard desc="Delete for Everyone — remove shared lists from all devices" title="" isDark={isDark} />
+            <PrivacyCard desc="Dark Mode — comfortable night viewing" title="" isDark={isDark} />
           </div>
         </div>
       </section>
@@ -344,23 +395,169 @@ const EasyGrocery: NextPage = () => {
         </div>
       </section>
 
-      {/* FOOTER */}
-      <footer className={`py-10 px-6 ${isDark ? 'bg-black/50 text-white' : 'bg-[#e7e6e6ff]/50 text-black'}`}>
-        <div className="max-w-7xl mx-auto text-center">
-          <div className="flex flex-col md:flex-row items-center justify-between gap-4">
-            <div className="flex items-center gap-3">
-              <div className="w-9 h-9 rounded-lg flex items-center justify-center font-bold">
-                <Image src={logo} alt="EasyGrocery" />
-              </div>
-              <div className="text-left">
-                <p className="font-semibold">EasyGrocery</p>
-                <p className={`text-xs ${isDark ? 'text-gray-400' : 'text-black'}`}>Simplify your shopping</p>
+      {/* CONTACT FORM */}
+      <section id="contact" className={`py-24 px-6 ${isDark ? 'bg-gradient-to-b from-black via-gray-950 to-black' : 'bg-gradient-to-b from-white via-sky-50 to-white'}`}>
+        <div className="max-w-4xl mx-auto">
+          <motion.div
+            initial={{ opacity: 0, y: 40 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            className="text-center mb-16"
+          >
+            <h2 className="text-4xl md:text-5xl font-bold mb-4">
+              Have a Question or Issue?
+            </h2>
+            <p className={`text-lg ${isDark ? 'text-gray-300' : 'text-slate-600'} max-w-2xl mx-auto`}>
+              Facing a bug, need assistance, or have a feature suggestion? Reach out to us, and our team will respond promptly!
+            </p>
+          </motion.div>
+
+          <motion.div
+            initial={{ opacity: 0, scale: 0.95 }}
+            whileInView={{ opacity: 1, scale: 1 }}
+            viewport={{ once: true }}
+            className={`relative rounded-3xl p-8 md:p-12 shadow-2xl border ${isDark ? 'bg-white/5 backdrop-blur-xl border-white/10' : 'bg-white/90 backdrop-blur border-slate-100'}`}
+          >
+            {/* Logo */}
+            <div className="absolute -top-12 left-1/2 -translate-x-1/2 w-24 h-24 rounded-full bg-gradient-to-br from-[#e7e6e6ff] to-[#e7e6e6ff] p-1 shadow-xl">
+              <div className="w-full h-full rounded-full bg-white flex items-center justify-center">
+                <Image src={logo} alt="EasyGrocery" className="w-16 h-16" />
               </div>
             </div>
-            <p className={`text-sm ${isDark ? 'text-gray-400' : 'text-black'}`}>&copy; 2025 EasyGrocery. All rights reserved.</p>
-            <div className="space-x-4">
-              <a href="#privacy" className={`${isDark ? 'text-gray-400 hover:text-white' : 'text-black hover:text-black'}`}>Privacy Policy</a>
-              <a href="#terms" className={`${isDark ? 'text-gray-400 hover:text-white' : 'text-black hover:text-black'}`}>Terms</a>
+
+            <form onSubmit={handleSubmit} className="mt-12 space-y-6">
+              <div className="grid md:grid-cols-2 gap-6">
+                <div>
+                  <label className={`block text-sm font-medium mb-2 ${isDark ? 'text-gray-300' : 'text-slate-700'}`}>
+                    Your Name
+                  </label>
+                  <input
+                    type="text"
+                    required
+                    value={formData.name}
+                    onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                    className={`w-full px-4 py-3 rounded-xl border ${isDark ? 'bg-white/5 border-white/20 text-white placeholder-gray-400 focus:border-white/50' : 'bg-white border-slate-200 text-slate-900 placeholder-slate-400 focus:border-sky-500'} transition focus:outline-none focus:ring-2 focus:ring-sky-500/20`}
+                    placeholder="John Doe"
+                  />
+                </div>
+                <div>
+                  <label className={`block text-sm font-medium mb-2 ${isDark ? 'text-gray-300' : 'text-slate-700'}`}>
+                    Email Address
+                  </label>
+                  <input
+                    type="email"
+                    required
+                    value={formData.email}
+                    onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                    className={`w-full px-4 py-3 rounded-xl border ${isDark ? 'bg-white/5 border-white/20 text-white placeholder-gray-400 focus:border-white/50' : 'bg-white border-slate-200 text-slate-900 placeholder-slate-400 focus:border-sky-500'} transition focus:outline-none focus:ring-2 focus:ring-sky-500/20`}
+                    placeholder="john@example.com"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className={`block text-sm font-medium mb-2 ${isDark ? 'text-gray-300' : 'text-slate-700'}`}>
+                  Your Query or Issue
+                </label>
+                <textarea
+                  required
+                  rows={5}
+                  value={formData.query}
+                  onChange={(e) => setFormData({ ...formData, query: e.target.value })}
+                  className={`w-full px-4 py-3 rounded-xl border ${isDark ? 'bg-white/5 border-white/20 text-white placeholder-gray-400 focus:border-white/50' : 'bg-white border-slate-200 text-slate-900 placeholder-slate-400 focus:border-sky-500'} transition focus:outline-none focus:ring-2 focus:ring-sky-500/20 resize-none`}
+                  placeholder="Describe your issue or suggestion in detail..."
+                />
+              </div>
+
+              <div className="flex justify-center">
+                <button
+                  type="submit"
+                  disabled={isSubmitting}
+                  className={`group inline-flex items-center gap-3 px-8 py-4 rounded-full font-bold text-lg shadow-lg transition-all ${isSubmitting
+                    ? 'opacity-70 cursor-not-allowed'
+                    : isDark
+                      ? 'bg-white text-black hover:bg-gray-200'
+                      : 'bg-gradient-to-r from-[#e7e6e6ff] to-[#e7e6e6ff] text-black hover:shadow-xl'
+                    } hover:scale-105`}
+                >
+                  {isSubmitting ? (
+                    <>
+                      <div className="w-5 h-5 border-2 border-t-transparent border-white rounded-full animate-spin" />
+                      Sending...
+                    </>
+                  ) : (
+                    <>
+                      Send Message
+                      <FaPaperPlane className="group-hover:translate-x-1 transition" />
+                    </>
+                  )}
+                </button>
+              </div>
+            </form>
+
+            {/* Success Message */}
+            {showSuccess && (
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0 }}
+                className={`mt-6 p-4 rounded-xl flex items-center gap-3 ${isDark ? 'bg-green-900/30 text-green-300 border border-green-700/30' : 'bg-green-50 text-green-700 border border-green-200'}`}
+              >
+                <FaCheck className="w-5 h-5" />
+                <span className="font-medium">Thank you! Your message has been sent. We'll get back to you soon.</span>
+              </motion.div>
+            )}
+          </motion.div>
+        </div>
+      </section>
+
+      {/* FOOTER */}
+      <footer className={`py-10 px-6 ${isDark ? 'bg-black/50 text-white' : 'bg-[#e7e6e6ff]/50 text-black'} transition-all duration-300`}>
+        <div className="max-w-7xl mx-auto">
+          <div className="flex flex-col md:flex-row items-center justify-between gap-6 text-center md:text-left">
+
+            {/* Logo + Name */}
+            <div className="flex items-center gap-3">
+              {/* ROUNDED LOGO (CONTACT FORM STYLE) */}
+              <div className="relative w-12 h-12">
+                <div className="absolute inset-0 rounded-full bg-gradient-to-br from-[#e7e6e6ff] to-[#e7e6e6ff] p-[2px] shadow-lg">
+                  <div className="w-full h-full rounded-full bg-white flex items-center justify-center overflow-hidden">
+                    <Image
+                      src={logo}
+                      alt="EasyGrocery Logo"
+                      width={32}
+                      height={32}
+                      className="w-8 h-8 object-contain"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              <div>
+                <p className={`font-bold text-lg ${isDark ? 'text-white' : 'text-slate-900'}`}>EasyGrocery</p>
+                <p className={`text-xs ${isDark ? 'text-gray-400' : 'text-slate-600'}`}>Simplify your shopping</p>
+              </div>
+            </div>
+
+            {/* Copyright */}
+            <p className={`text-sm ${isDark ? 'text-gray-400' : 'text-slate-700'}`}>
+              &copy; 2025 EasyGrocery. All rights reserved.
+            </p>
+
+            {/* Links */}
+            <div className="flex gap-6 text-sm">
+              <a
+                href="#privacy"
+                className={`${isDark ? 'text-gray-400 hover:text-white' : 'text-slate-700 hover:text-slate-900'} transition-colors`}
+              >
+                Privacy Policy
+              </a>
+              <a
+                href="#terms"
+                className={`${isDark ? 'text-gray-400 hover:text-white' : 'text-slate-700 hover:text-slate-900'} transition-colors`}
+              >
+                Terms
+              </a>
             </div>
           </div>
         </div>
@@ -415,47 +612,5 @@ function FeatureMini({ title, desc, isDark }: { title: string; desc: string; isD
       <h4 className={`font-semibold ${isDark ? 'text-white' : 'text-slate-900'}`}>{title}</h4>
       <p className={`mt-2 text-sm ${isDark ? 'text-gray-300' : 'text-slate-600'}`}>{desc}</p>
     </div>
-  );
-}function VideoSequence() {
-  const videoRef = useRef<HTMLVideoElement>(null);
-  const [currentVideo, setCurrentVideo] = useState(0);
-
-  const videos = [
-    "/videos/demo1.mp4",
-    "/videos/demo2.mp4",
-    "/videos/demo3.mp4"
-  ];
-
-  useEffect(() => {
-    const video = videoRef.current;
-    if (!video) return;
-
-    const handleEnded = () => {
-      const nextIndex = (currentVideo + 1) % videos.length;
-      setCurrentVideo(nextIndex);
-    };
-
-    video.addEventListener('ended', handleEnded);
-
-    // Play current video
-    video.src = videos[currentVideo];
-    video.load();
-    video.play().catch(() => {});
-
-    return () => {
-      video.removeEventListener('ended', handleEnded);
-    };
-  }, [currentVideo]);
-
-  return (
-    <video
-      ref={videoRef}
-      muted
-      playsInline
-      className="w-full h-full object-cover"
-      poster="/videos/poster.jpg"
-      preload="metadata"
-      onError={(e) => console.error("Video error:", e)}
-    />
   );
 }
